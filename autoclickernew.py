@@ -10,7 +10,7 @@ mouse = Controller()
 
 # Globals to control the clicker
 clicking = False
-clicks_per_second = 1.0
+clicks_per_second = 60
 click_button = Button.left
 
 # Function to perform mouse clicking
@@ -84,14 +84,14 @@ cps_label.pack(pady=5)
 
 # User Input
 cps_entry = tk.Entry(app,relief="ridge")
-cps_entry.insert(0, "1.0")  # Default value
+cps_entry.insert(0, "60")  # Default value
 cps_entry.pack(pady=5)
 
 # Update clicks per second button
 update_button = tk.Button(app, text="Update Clicks Per Second", command=lambda: update_clicks_per_second(cps_entry.get()))
 update_button.pack(pady=5)
 
-# Button Selection Dropdown
+# Button Selection Dropdown 
 button_label = tk.Label(app,text="Selected Mouse Button:")
 button_label.pack(pady=5)
 
