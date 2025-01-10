@@ -1,0 +1,1 @@
+clicks_per_second=80.0
