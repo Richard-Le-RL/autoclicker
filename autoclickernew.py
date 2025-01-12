@@ -10,22 +10,38 @@ import os
 mouse = Controller()
 
 # Globals to control the clicker
-clicking = False
 clicks_per_second = 1.0
 click_button = Button.left
 settings_file = "settings.txt"
-toggle_key = keyboard.Key.shift
-waiting_for_key = False
+toggle_keys = set([keyboard.Key.shift])
+waiting_for_keys = False
+current_keys = set()
+
+# Build the Tkinter application
+app = tk.Tk()
+app.title("Automatic Mouse Clicker")
+app.geometry("450x500")
+
+# Initialize Tkinter variables
+clicking_state = tk.BooleanVar(value=False)
+
+# Helper function to get key symbol
+def get_key_symbol(key):
+    if hasattr(key, 'vk'):
+        return chr(key.vk) if 32 <= key.vk <= 126 else str(key)
+    elif hasattr(key, 'name'):
+        return key.name
+    return str(key)
 
 # Function to save settings
 def save_settings():
     with open(settings_file, "w") as file:
         file.write(f"clicks_per_second={clicks_per_second}\n")
-        file.write(f"toggle_key={toggle_key}\n")
+        file.write(f"toggle_keys={[get_key_symbol(key) for key in toggle_keys]}\n")
 
 # Function to load settings
 def load_settings():
-    global clicks_per_second, toggle_key
+    global clicks_per_second, toggle_keys
     if os.path.exists(settings_file):
         with open(settings_file, "r") as file:
             for line in file:
@@ -34,24 +50,35 @@ def load_settings():
                         clicks_per_second = float(line.strip().split("=")[1])
                     except ValueError:
                         clicks_per_second = 1.0
-                elif line.startswith("toggle_key="):
+                elif line.startswith("toggle_keys="):
                     try:
-                        toggle_key = eval(line.strip().split("=")[1])
+                        keys = eval(line.strip().split("=")[1])
+                        toggle_keys.clear()
+                        for key in keys:
+                            if hasattr(keyboard.Key, key):
+                                toggle_keys.add(getattr(keyboard.Key, key))
+                            else:
+                                toggle_keys.add(keyboard.KeyCode.from_char(key))
                     except Exception:
-                        toggle_key = keyboard.Key.shift
+                        toggle_keys = set([keyboard.Key.shift])
+
+# Load settings
+load_settings()
 
 # Function to perform mouse clicking
 def start_clicking():
-    global clicking
-    while clicking:
-        mouse.click(click_button, 1)
-        time.sleep(1 / clicks_per_second)
+    global clicking_state
+    try:
+        while clicking_state.get():
+            mouse.click(click_button, 1)
+            time.sleep(1 / clicks_per_second)
+    except Exception as e:
+        messagebox.showerror("Error", f"An error occurred: {e}")
 
 # Function to start the clicker thread
 def start_thread():
-    global clicking
-    if not clicking:
-        clicking = True
+    if not clicking_state.get():
+        clicking_state.set(True)
         update_ui_state()  # Update UI state when starting
         thread = threading.Thread(target=start_clicking)
         thread.daemon = True  # Ensure thread exits when the program does
@@ -59,24 +86,32 @@ def start_thread():
 
 # Function to stop clicking
 def stop_clicking():
-    global clicking
-    clicking = False
+    clicking_state.set(False)
     update_ui_state()  # Update UI state when stopping
 
 # Key listener for hotkeys
 def on_press(key):
-    global clicking, toggle_key, waiting_for_key
-    if waiting_for_key:
-        set_new_toggle_key(key)
+    global waiting_for_keys, current_keys, toggle_keys
+    if waiting_for_keys:
+        current_keys.add(key)
+        update_key_display()
         return
 
-    if key == toggle_key:
-        if clicking:
+    current_keys.add(key)
+    if toggle_keys == current_keys:
+        if clicking_state.get():
             stop_clicking()
         else:
             start_thread()
 
-listener = keyboard.Listener(on_press=on_press)
+def on_release(key):
+    global current_keys, waiting_for_keys
+    if waiting_for_keys:
+        return
+    if key in current_keys:
+        current_keys.remove(key)
+
+listener = keyboard.Listener(on_press=on_press, on_release=on_release)
 listener.start()
 
 # Function to update clicks per second
@@ -99,31 +134,42 @@ def update_click_button(new_button):
     elif new_button == "Middle":
         click_button = Button.middle
 
-def set_new_toggle_key(key):
-    global toggle_key, waiting_for_key
-    toggle_key = key
-    waiting_for_key = False
+def set_new_toggle_keys():
+    global toggle_keys, waiting_for_keys, current_keys
+    if not current_keys:
+        messagebox.showerror("Error", "No keys selected for toggle. Please press some keys.")
+        return
+    toggle_keys = current_keys.copy()
+    waiting_for_keys = False
     key_entry.config(state="normal")
     key_entry.delete(0, tk.END)
-    key_entry.insert(0, key.name if hasattr(key, 'name') else str(key))
+    key_entry.insert(0, "+".join([get_key_symbol(key) for key in toggle_keys]))
     key_entry.config(state="readonly")
+    key_label.config(text=f"Toggle Keys (current: {', '.join([get_key_symbol(key) for key in toggle_keys])}):")
     save_settings()
-    messagebox.showinfo("Keybind Set", f"Toggle key set to: {key}")
+    messagebox.showinfo("Keybind Set", f"Toggle keys set to: {', '.join([get_key_symbol(key) for key in toggle_keys])}")
+
+def start_keybinding():
+    global waiting_for_keys, current_keys
+    waiting_for_keys = True
+    current_keys = set()
+    key_entry.config(state="normal")
+    key_entry.delete(0, tk.END)
+    key_entry.insert(0, "Press keys...")
+    key_entry.config(state="readonly")
+
+def update_key_display():
+    key_entry.config(state="normal")
+    key_entry.delete(0, tk.END)
+    key_entry.insert(0, "+".join([get_key_symbol(key) for key in current_keys]))
+    key_entry.config(state="readonly")
 
 # Function to update UI state
 def update_ui_state():
-    if clicking:
+    if clicking_state.get():
         status_label.config(text="Status: ON", bg="green", fg="white")
     else:
         status_label.config(text="Status: OFF", bg="red", fg="white")
-
-# Build the Tkinter application
-app = tk.Tk()
-app.title("Automatic Mouse Clicker")
-app.geometry("300x400")
-
-# Load settings
-load_settings()
 
 # Clicks Per Second Label and Entry
 cps_label = tk.Label(app, text="Clicks Per Second:")
@@ -148,26 +194,21 @@ button_menu = tk.OptionMenu(app, button_var, *button_options, command=update_cli
 button_menu.pack(pady=5)
 
 # Toggle Key Selection
-key_label = tk.Label(app, text="Toggle Key (current: shift):")
+key_label = tk.Label(app, text=f"Toggle Keys (current: {', '.join([get_key_symbol(key) for key in toggle_keys])}):")
 key_label.pack(pady=5)
 
 key_entry = tk.Entry(app, relief="ridge", state="readonly")
-key_entry.insert(0, toggle_key.name if hasattr(toggle_key, 'name') else str(toggle_key))
+key_entry.insert(0, "+".join([get_key_symbol(key) for key in toggle_keys]))
 key_entry.pack(pady=5)
 
-update_key_button = tk.Button(app, text="Set New Toggle Key", command=lambda: start_keybinding())
+update_key_button = tk.Button(app, text="Set New Toggle Keys", command=start_keybinding)
 update_key_button.pack(pady=5)
 
-def start_keybinding():
-    global waiting_for_key
-    waiting_for_key = True
-    key_entry.config(state="normal")
-    key_entry.delete(0, tk.END)
-    key_entry.insert(0, "Press any key...")
-    key_entry.config(state="readonly")
+confirm_key_button = tk.Button(app, text="Confirm Toggle Keys", command=set_new_toggle_keys)
+confirm_key_button.pack(pady=5)
 
 # Instructions Label
-instructions_label = tk.Label(app, text="Press the selected key to toggle clicking on/off", justify="center")
+instructions_label = tk.Label(app, text="Press the selected key combination to toggle clicking on/off", justify="center")
 instructions_label.pack(pady=10)
 
 # Status Label
