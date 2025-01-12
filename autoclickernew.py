@@ -10,20 +10,13 @@ import os
 mouse = Controller()
 
 # Globals to control the clicker
+clicking = False
 clicks_per_second = 1.0
 click_button = Button.left
 settings_file = "settings.txt"
 toggle_keys = set([keyboard.Key.shift])
 waiting_for_keys = False
 current_keys = set()
-
-# Build the Tkinter application
-app = tk.Tk()
-app.title("Automatic Mouse Clicker")
-app.geometry("450x500")
-
-# Initialize Tkinter variables
-clicking_state = tk.BooleanVar(value=False)
 
 # Helper function to get key symbol
 def get_key_symbol(key):
@@ -62,23 +55,18 @@ def load_settings():
                     except Exception:
                         toggle_keys = set([keyboard.Key.shift])
 
-# Load settings
-load_settings()
-
 # Function to perform mouse clicking
 def start_clicking():
-    global clicking_state
-    try:
-        while clicking_state.get():
-            mouse.click(click_button, 1)
-            time.sleep(1 / clicks_per_second)
-    except Exception as e:
-        messagebox.showerror("Error", f"An error occurred: {e}")
+    global clicking
+    while clicking:
+        mouse.click(click_button, 1)
+        time.sleep(1 / clicks_per_second)
 
 # Function to start the clicker thread
 def start_thread():
-    if not clicking_state.get():
-        clicking_state.set(True)
+    global clicking
+    if not clicking:
+        clicking = True
         update_ui_state()  # Update UI state when starting
         thread = threading.Thread(target=start_clicking)
         thread.daemon = True  # Ensure thread exits when the program does
@@ -86,12 +74,13 @@ def start_thread():
 
 # Function to stop clicking
 def stop_clicking():
-    clicking_state.set(False)
+    global clicking
+    clicking = False
     update_ui_state()  # Update UI state when stopping
 
 # Key listener for hotkeys
 def on_press(key):
-    global waiting_for_keys, current_keys, toggle_keys
+    global clicking, waiting_for_keys, current_keys, toggle_keys
     if waiting_for_keys:
         current_keys.add(key)
         update_key_display()
@@ -99,7 +88,7 @@ def on_press(key):
 
     current_keys.add(key)
     if toggle_keys == current_keys:
-        if clicking_state.get():
+        if clicking:
             stop_clicking()
         else:
             start_thread()
@@ -166,10 +155,18 @@ def update_key_display():
 
 # Function to update UI state
 def update_ui_state():
-    if clicking_state.get():
+    if clicking:
         status_label.config(text="Status: ON", bg="green", fg="white")
     else:
         status_label.config(text="Status: OFF", bg="red", fg="white")
+
+# Build the Tkinter application
+app = tk.Tk()
+app.title("Automatic Mouse Clicker")
+app.geometry("450x500")
+
+# Load settings
+load_settings()
 
 # Clicks Per Second Label and Entry
 cps_label = tk.Label(app, text="Clicks Per Second:")
