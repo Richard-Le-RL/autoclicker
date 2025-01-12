@@ -20,11 +20,24 @@ current_keys = set()
 
 # Helper function to get key symbol
 def get_key_symbol(key):
-    if hasattr(key, 'vk'):
-        return chr(key.vk) if 32 <= key.vk <= 126 else str(key)
-    elif hasattr(key, 'name'):
-        return key.name
+    # Handle special keys
+    if isinstance(key, keyboard.Key):
+        if key == keyboard.Key.shift:
+            return "shift"
+        elif key == keyboard.Key.ctrl:
+            return "ctrl"
+        elif key == keyboard.Key.alt:
+            return "alt"
+        elif key == keyboard.Key.caps_lock:
+            return "caps_lock"
+        else:
+            return str(key).split('.')[-1]
+    # Handle character keys
+    elif hasattr(key, 'char') and key.char is not None:
+        return key.char
+    # Handle other cases (such as function keys)
     return str(key)
+
 
 # Function to save settings
 def save_settings():
@@ -87,7 +100,11 @@ def on_press(key):
         return
 
     current_keys.add(key)
-    if toggle_keys == current_keys:
+    
+    print(f"Pressed: {key}, Current Keys: {current_keys}, Toggle Keys: {toggle_keys}")  # Debugging line
+    
+    # Check if all keys in toggle_keys are pressed (not just one key)
+    if set(toggle_keys).issubset(current_keys):
         if clicking:
             stop_clicking()
         else:
@@ -99,6 +116,17 @@ def on_release(key):
         return
     if key in current_keys:
         current_keys.remove(key)
+
+    print(f"Released: {key}, Current Keys: {current_keys}")  # Debugging line
+    
+    # Ensure that the autoclicker is not triggered unless all keys are pressed
+    if set(toggle_keys).issubset(current_keys):
+        if clicking:
+            stop_clicking()
+        else:
+            start_thread()
+
+
 
 listener = keyboard.Listener(on_press=on_press, on_release=on_release)
 listener.start()
@@ -129,14 +157,20 @@ def set_new_toggle_keys():
         messagebox.showerror("Error", "No keys selected for toggle. Please press some keys.")
         return
     toggle_keys = current_keys.copy()
+    
+    # Reset current_keys to ensure it doesn't trigger with incomplete key combinations
+    current_keys = set()  # Reset to ensure that only the full combination can trigger
+
     waiting_for_keys = False
     key_entry.config(state="normal")
     key_entry.delete(0, tk.END)
     key_entry.insert(0, "+".join([get_key_symbol(key) for key in toggle_keys]))
     key_entry.config(state="readonly")
     key_label.config(text=f"Toggle Keys (current: {', '.join([get_key_symbol(key) for key in toggle_keys])}):")
+    
     save_settings()
     messagebox.showinfo("Keybind Set", f"Toggle keys set to: {', '.join([get_key_symbol(key) for key in toggle_keys])}")
+
 
 def start_keybinding():
     global waiting_for_keys, current_keys

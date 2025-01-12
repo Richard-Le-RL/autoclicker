@@ -1,2 +1,2 @@
-clicks_per_second=50.0
-toggle_keys=['shift', 'alt']
+clicks_per_second=80.0
+toggle_keys=['j', 'k', 'l']
