@@ -7,7 +7,7 @@ import time
 import os
 
 # Initialize mouse controller 
-mouse = Controller()
+mouse = Controller() 
 
 # Globals to control the clicker
 clicking = False
@@ -23,15 +23,21 @@ def get_key_symbol(key):
     # Handle special keys
     if isinstance(key, keyboard.Key):
         if key == keyboard.Key.shift:
-            return "shift_l"  # Default case for shift, but we can use shift_l or shift_r for more specificity
+            return "⇧-left"  
         elif key == keyboard.Key.ctrl:
-            return "ctrl"
+            return "⌃"
         elif key == keyboard.Key.alt:
-            return "alt"
+            return "⌥"
         elif key == keyboard.Key.caps_lock:
-            return "caps_lock"
+            return "⇪"
+        elif key == keyboard.Key.shift_l:
+            return "⇧-left"
         elif key == keyboard.Key.shift_r:
-            return "shift_r"  # Right shift
+            return "⇧-right"  # Right shift
+        elif key == keyboard.Key.cmd:
+            return "⌘-left"
+        elif key == keyboard.Key.cmd_r:
+            return "⌘-right"
         else:
             return str(key).split('.')[-1]
     # Handle character keys
