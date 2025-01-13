@@ -23,13 +23,15 @@ def get_key_symbol(key):
     # Handle special keys
     if isinstance(key, keyboard.Key):
         if key == keyboard.Key.shift:
-            return "shift"
+            return "shift_l"  # Default case for shift, but we can use shift_l or shift_r for more specificity
         elif key == keyboard.Key.ctrl:
             return "ctrl"
         elif key == keyboard.Key.alt:
             return "alt"
         elif key == keyboard.Key.caps_lock:
             return "caps_lock"
+        elif key == keyboard.Key.shift_r:
+            return "shift_r"  # Right shift
         else:
             return str(key).split('.')[-1]
     # Handle character keys
@@ -37,6 +39,7 @@ def get_key_symbol(key):
         return key.char
     # Handle other cases (such as function keys)
     return str(key)
+
 
 
 # Function to save settings
