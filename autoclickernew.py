@@ -193,7 +193,7 @@ def start_keybinding():
 def update_key_display():
     key_entry.config(state="normal")
     key_entry.delete(0, tk.END)
-    key_entry.insert(0, "+".join([get_key_symbol(key) for key in current_keys]))
+    key_entry.insert(0, " + ".join([get_key_symbol(key) for key in current_keys]))
     key_entry.config(state="readonly")
 
 # Function to update UI state
@@ -238,7 +238,7 @@ key_label = tk.Label(app, text=f"Toggle Keys (current: {', '.join([get_key_symbo
 key_label.pack(pady=5)
 
 key_entry = tk.Entry(app, relief="ridge", state="readonly")
-key_entry.insert(0, "+".join([get_key_symbol(key) for key in toggle_keys]))
+key_entry.insert(0, " + ".join([get_key_symbol(key) for key in toggle_keys]))
 key_entry.pack(pady=5)
 
 update_key_button = tk.Button(app, text="Set New Toggle Keys", command=start_keybinding)
