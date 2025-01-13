@@ -13,10 +13,10 @@ mouse = Controller()
 clicking = False
 clicks_per_second = 1.0
 click_button = Button.left
-settings_file = "settings.txt"
-toggle_keys = set([keyboard.Key.shift])
+settings_file = "settings.txt" 
+# toggle_keys = set([keyboard.Key.shift]) # When we initially used just the shift key for triggering the clicker
 waiting_for_keys = False
-current_keys = set()
+current_keys = set() # Start as an empty set 
 
 # Helper function to get key symbol
 def get_key_symbol(key):
@@ -45,8 +45,6 @@ def get_key_symbol(key):
         return key.char
     # Handle other cases (such as function keys)
     return str(key)
-
-
 
 # Function to save settings
 def save_settings():
