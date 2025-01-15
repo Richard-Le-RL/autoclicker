@@ -128,7 +128,7 @@ def on_press(key):
 
     current_keys.add(key)
     
-    print(f"Pressed: {key}, Current Keys: {current_keys}, Toggle Keys: {toggle_keys}")  # Debugging line
+    # print(f"Pressed: {key}, Current Keys: {current_keys}, Toggle Keys: {toggle_keys}")  # Debugging line
     
     # Check if all keys in toggle_keys are pressed (not just one key)
     if set(toggle_keys).issubset(current_keys):
@@ -144,7 +144,7 @@ def on_release(key):
     if key in current_keys:
         current_keys.remove(key)
 
-    print(f"Released: {key}, Current Keys: {current_keys}")  # Debugging line
+    # jioprint(f"Released: {key}, Current Keys: {current_keys}")  # Debugging line
     
     # Ensure that the autoclicker is not triggered unless all keys are pressed
     if set(toggle_keys).issubset(current_keys):
