@@ -198,7 +198,7 @@ def set_new_toggle_keys():
     save_settings()
     messagebox.showinfo("Keybind Set", f"Toggle keys set to: {', '.join([get_key_symbol(key) for key in toggle_keys])}")
 
-
+ 
 def start_keybinding():
     global waiting_for_keys, current_keys
     waiting_for_keys = True
